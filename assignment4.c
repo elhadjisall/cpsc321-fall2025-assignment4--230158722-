@@ -23,6 +23,7 @@ void allocate_memory();
 void free_memory();
 void read_input();
 void calculate_need();
+bool is_safe(int *safe_sequence);
 
 // Allocate memory for all data structures
 void allocate_memory() {
@@ -101,5 +102,66 @@ void calculate_need() {
             need[i][j] = maximum[i][j] - allocation[i][j];
         }
     }
+}
+
+// Safety algorithm: returns true if system is in safe state
+// safe_sequence will contain the safe sequence if found
+bool is_safe(int *safe_sequence) {
+    int *work = (int*)malloc(NUMBER_OF_RESOURCES * sizeof(int));
+    bool *finish = (bool*)malloc(NUMBER_OF_CUSTOMERS * sizeof(bool));
+    
+    // Initialize work = available
+    for (int i = 0; i < NUMBER_OF_RESOURCES; i++) {
+        work[i] = available[i];
+    }
+    
+    // Initialize finish[i] = false for all i
+    for (int i = 0; i < NUMBER_OF_CUSTOMERS; i++) {
+        finish[i] = false;
+    }
+    
+    int count = 0;
+    bool found;
+    
+    // Find a customer i such that finish[i] == false and need[i] <= work
+    while (count < NUMBER_OF_CUSTOMERS) {
+        found = false;
+        
+        for (int i = 0; i < NUMBER_OF_CUSTOMERS; i++) {
+            if (!finish[i]) {
+                // Check if need[i] <= work
+                bool can_allocate = true;
+                for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
+                    if (need[i][j] > work[j]) {
+                        can_allocate = false;
+                        break;
+                    }
+                }
+                
+                if (can_allocate) {
+                    // Customer i can complete: work = work + allocation[i]
+                    for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
+                        work[j] += allocation[i][j];
+                    }
+                    finish[i] = true;
+                    safe_sequence[count] = i;
+                    count++;
+                    found = true;
+                    break;
+                }
+            }
+        }
+        
+        // If no customer found, system is unsafe
+        if (!found) {
+            free(work);
+            free(finish);
+            return false;
+        }
+    }
+    
+    free(work);
+    free(finish);
+    return true;
 }
 
