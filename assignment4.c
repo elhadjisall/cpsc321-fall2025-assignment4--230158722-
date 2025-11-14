@@ -209,3 +209,75 @@ bool request_resources(int customer_id, int *request) {
     return true;
 }
 
+int main() {
+    // Read initial system state
+    read_input();
+    
+    // Calculate need matrix
+    calculate_need();
+    
+    // Read resource request
+    printf("Enter Resource Request: ");
+    int customer_id;
+    scanf("%d", &customer_id);
+    
+    int *request = (int*)malloc(NUMBER_OF_RESOURCES * sizeof(int));
+    for (int i = 0; i < NUMBER_OF_RESOURCES; i++) {
+        scanf("%d", &request[i]);
+    }
+    
+    // Check if request is valid and process it
+    // First check basic validity
+    bool valid = true;
+    for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
+        if (request[j] > need[customer_id][j] || request[j] > available[j]) {
+            valid = false;
+            break;
+        }
+    }
+    
+    if (!valid) {
+        printf("State Unsafe\n");
+        free(request);
+        free_memory();
+        return 0;
+    }
+    
+    // Temporarily apply the request
+    for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
+        available[j] -= request[j];
+        allocation[customer_id][j] += request[j];
+        need[customer_id][j] -= request[j];
+    }
+    
+    // Check if resulting state is safe
+    int *safe_sequence = (int*)malloc(NUMBER_OF_CUSTOMERS * sizeof(int));
+    bool safe = is_safe(safe_sequence);
+    
+    if (safe) {
+        printf("State Safe\n");
+        printf("Safe sequence: ");
+        for (int i = 0; i < NUMBER_OF_CUSTOMERS; i++) {
+            printf("C%d", safe_sequence[i]);
+            if (i < NUMBER_OF_CUSTOMERS - 1) {
+                printf(" ");
+            }
+        }
+        printf("\n");
+    } else {
+        // Revert the request
+        for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
+            available[j] += request[j];
+            allocation[customer_id][j] -= request[j];
+            need[customer_id][j] += request[j];
+        }
+        printf("State Unsafe\n");
+    }
+    
+    free(request);
+    free(safe_sequence);
+    free_memory();
+    
+    return 0;
+}
+
