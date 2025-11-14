@@ -24,6 +24,7 @@ void free_memory();
 void read_input();
 void calculate_need();
 bool is_safe(int *safe_sequence);
+bool request_resources(int customer_id, int *request);
 
 // Allocate memory for all data structures
 void allocate_memory() {
@@ -162,6 +163,49 @@ bool is_safe(int *safe_sequence) {
     
     free(work);
     free(finish);
+    return true;
+}
+
+// Handle resource request from a customer
+// Returns true if request is granted, false if denied
+bool request_resources(int customer_id, int *request) {
+    // Step 1: Check if request <= need[customer_id]
+    for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
+        if (request[j] > need[customer_id][j]) {
+            return false; // Request exceeds need
+        }
+    }
+    
+    // Step 2: Check if request <= available
+    for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
+        if (request[j] > available[j]) {
+            return false; // Request exceeds available
+        }
+    }
+    
+    // Step 3: Try to allocate resources temporarily
+    for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
+        available[j] -= request[j];
+        allocation[customer_id][j] += request[j];
+        need[customer_id][j] -= request[j];
+    }
+    
+    // Step 4: Check if resulting state is safe
+    int *safe_sequence = (int*)malloc(NUMBER_OF_CUSTOMERS * sizeof(int));
+    bool safe = is_safe(safe_sequence);
+    
+    if (!safe) {
+        // Revert the allocation
+        for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
+            available[j] += request[j];
+            allocation[customer_id][j] -= request[j];
+            need[customer_id][j] += request[j];
+        }
+        free(safe_sequence);
+        return false;
+    }
+    
+    free(safe_sequence);
     return true;
 }
 
