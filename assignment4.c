@@ -319,10 +319,16 @@ int main() {
     }
     
     // Check if request is valid and process it
-    // First check basic validity
+    // Step 1: Check if request <= need[customer_id] (ensures allocation + request <= maximum)
+    // Step 2: Check if request <= available
     bool valid = true;
     for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
         if (request[j] > need[customer_id][j] || request[j] > available[j]) {
+            valid = false;
+            break;
+        }
+        // Additional check: ensure allocation + request doesn't exceed maximum
+        if (allocation[customer_id][j] + request[j] > maximum[customer_id][j]) {
             valid = false;
             break;
         }
