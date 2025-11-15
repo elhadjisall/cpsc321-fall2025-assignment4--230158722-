@@ -25,6 +25,7 @@ void read_input();
 void calculate_need();
 bool is_safe(int *safe_sequence);
 bool request_resources(int customer_id, int *request);
+bool validate_input();
 
 // Allocate memory for all data structures
 void allocate_memory() {
@@ -94,6 +95,39 @@ void read_input() {
     }
     
     free(total_resources);
+}
+
+// Validate input data for consistency
+bool validate_input() {
+    // Check for negative values
+    for (int i = 0; i < NUMBER_OF_RESOURCES; i++) {
+        if (available[i] < 0) {
+            return false;
+        }
+    }
+    
+    for (int i = 0; i < NUMBER_OF_CUSTOMERS; i++) {
+        for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
+            if (maximum[i][j] < 0 || allocation[i][j] < 0) {
+                return false;
+            }
+            // Allocation should not exceed maximum
+            if (allocation[i][j] > maximum[i][j]) {
+                return false;
+            }
+        }
+    }
+    
+    // Check that need matrix is non-negative (calculated after)
+    for (int i = 0; i < NUMBER_OF_CUSTOMERS; i++) {
+        for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
+            if (need[i][j] < 0) {
+                return false;
+            }
+        }
+    }
+    
+    return true;
 }
 
 // Calculate need matrix: need[i][j] = maximum[i][j] - allocation[i][j]
