@@ -30,15 +30,29 @@ bool validate_input();
 // Allocate memory for all data structures
 void allocate_memory() {
     available = (int*)malloc(NUMBER_OF_RESOURCES * sizeof(int));
+    if (available == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
     
     maximum = (int**)malloc(NUMBER_OF_CUSTOMERS * sizeof(int*));
     allocation = (int**)malloc(NUMBER_OF_CUSTOMERS * sizeof(int*));
     need = (int**)malloc(NUMBER_OF_CUSTOMERS * sizeof(int*));
     
+    if (maximum == NULL || allocation == NULL || need == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+    
     for (int i = 0; i < NUMBER_OF_CUSTOMERS; i++) {
         maximum[i] = (int*)malloc(NUMBER_OF_RESOURCES * sizeof(int));
         allocation[i] = (int*)malloc(NUMBER_OF_RESOURCES * sizeof(int));
         need[i] = (int*)malloc(NUMBER_OF_RESOURCES * sizeof(int));
+        
+        if (maximum[i] == NULL || allocation[i] == NULL || need[i] == NULL) {
+            fprintf(stderr, "Memory allocation failed\n");
+            exit(1);
+        }
     }
 }
 
@@ -60,10 +74,16 @@ void free_memory() {
 // Read input from user
 void read_input() {
     printf("Enter number of customers (processes): ");
-    scanf("%d", &NUMBER_OF_CUSTOMERS);
+    if (scanf("%d", &NUMBER_OF_CUSTOMERS) != 1 || NUMBER_OF_CUSTOMERS <= 0) {
+        fprintf(stderr, "Invalid input\n");
+        exit(1);
+    }
     
     printf("Enter number of resources: ");
-    scanf("%d", &NUMBER_OF_RESOURCES);
+    if (scanf("%d", &NUMBER_OF_RESOURCES) != 1 || NUMBER_OF_RESOURCES <= 0) {
+        fprintf(stderr, "Invalid input\n");
+        exit(1);
+    }
     
     allocate_memory();
     
