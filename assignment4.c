@@ -250,14 +250,35 @@ int main() {
     // Calculate need matrix
     calculate_need();
     
+    // Validate input data
+    if (!validate_input()) {
+        printf("State Unsafe\n");
+        free_memory();
+        return 0;
+    }
+    
     // Read resource request
     printf("Enter Resource Request: ");
     int customer_id;
     scanf("%d", &customer_id);
     
+    // Validate customer_id
+    if (customer_id < 0 || customer_id >= NUMBER_OF_CUSTOMERS) {
+        printf("State Unsafe\n");
+        free_memory();
+        return 0;
+    }
+    
     int *request = (int*)malloc(NUMBER_OF_RESOURCES * sizeof(int));
     for (int i = 0; i < NUMBER_OF_RESOURCES; i++) {
         scanf("%d", &request[i]);
+        // Check for negative request values
+        if (request[i] < 0) {
+            printf("State Unsafe\n");
+            free(request);
+            free_memory();
+            return 0;
+        }
     }
     
     // Check if request is valid and process it
