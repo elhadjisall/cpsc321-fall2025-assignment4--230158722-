@@ -165,6 +165,12 @@ bool is_safe(int *safe_sequence) {
     int *work = (int*)malloc(NUMBER_OF_RESOURCES * sizeof(int));
     bool *finish = (bool*)malloc(NUMBER_OF_CUSTOMERS * sizeof(bool));
     
+    if (work == NULL || finish == NULL) {
+        if (work != NULL) free(work);
+        if (finish != NULL) free(finish);
+        return false;
+    }
+    
     // Initialize work = available
     for (int i = 0; i < NUMBER_OF_RESOURCES; i++) {
         work[i] = available[i];
@@ -290,8 +296,19 @@ int main() {
     }
     
     int *request = (int*)malloc(NUMBER_OF_RESOURCES * sizeof(int));
+    if (request == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        free_memory();
+        return 1;
+    }
+    
     for (int i = 0; i < NUMBER_OF_RESOURCES; i++) {
-        scanf("%d", &request[i]);
+        if (scanf("%d", &request[i]) != 1) {
+            printf("State Unsafe\n");
+            free(request);
+            free_memory();
+            return 0;
+        }
         // Check for negative request values
         if (request[i] < 0) {
             printf("State Unsafe\n");
@@ -327,6 +344,19 @@ int main() {
     
     // Check if resulting state is safe
     int *safe_sequence = (int*)malloc(NUMBER_OF_CUSTOMERS * sizeof(int));
+    if (safe_sequence == NULL) {
+        // Revert the request
+        for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
+            available[j] += request[j];
+            allocation[customer_id][j] -= request[j];
+            need[customer_id][j] += request[j];
+        }
+        printf("State Unsafe\n");
+        free(request);
+        free_memory();
+        return 1;
+    }
+    
     bool safe = is_safe(safe_sequence);
     
     if (safe) {
