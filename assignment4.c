@@ -1,3 +1,15 @@
+/*
+ * Banker's Algorithm Implementation
+ * 
+ * This program implements the Banker's Algorithm for deadlock avoidance.
+ * It reads system state (available resources, maximum demand, current allocation)
+ * and processes resource requests, determining if granting the request would
+ * leave the system in a safe state.
+ * 
+ * Input: System state and resource request
+ * Output: "State Safe" with safe sequence, or "State Unsafe"
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
