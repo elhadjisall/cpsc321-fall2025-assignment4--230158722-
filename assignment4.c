@@ -1,20 +1,7 @@
 /*
- * Banker's Algorithm Implementation
- * CPSC 321: Operating Systems - Assignment 4
- * 
- * This program implements the Banker's Algorithm for deadlock avoidance.
- * The Banker's Algorithm ensures that resource allocation leaves the system
- * in a safe state, preventing deadlock.
- * 
- * Algorithm Overview:
- * 1. Maintains data structures: available, maximum, allocation, and need
- * 2. When a request is made, checks if it can be granted safely
- * 3. Uses Safety Algorithm to verify the system remains in a safe state
- * 4. Only grants requests that result in a safe state
- * 
- * Input: System state (customers, resources, available, maximum, allocation)
- *        and a resource request from a customer
- * Output: "State Safe" with safe sequence, or "State Unsafe"
+ * Name: El Sall
+ * Student Number: 230158722
+ * GitHub Repository: https://github.com/elhadjisall/cpsc321-fall2025-assignment4--230158722-
  */
 
 #include <stdio.h>
