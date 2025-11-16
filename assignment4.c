@@ -101,20 +101,40 @@ void read_input() {
     
     printf("Enter number of instances of each resource type (%d values): ", NUMBER_OF_RESOURCES);
     int *total_resources = (int*)malloc(NUMBER_OF_RESOURCES * sizeof(int));
+    if (total_resources == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        free_memory();
+        exit(1);
+    }
     for (int i = 0; i < NUMBER_OF_RESOURCES; i++) {
-        scanf("%d", &total_resources[i]);
+        if (scanf("%d", &total_resources[i]) != 1 || total_resources[i] < 0) {
+            fprintf(stderr, "Invalid input\n");
+            free(total_resources);
+            free_memory();
+            exit(1);
+        }
     }
     
     printf("Enter available resources (%d values): ", NUMBER_OF_RESOURCES);
     for (int i = 0; i < NUMBER_OF_RESOURCES; i++) {
-        scanf("%d", &available[i]);
+        if (scanf("%d", &available[i]) != 1 || available[i] < 0) {
+            fprintf(stderr, "Invalid input\n");
+            free(total_resources);
+            free_memory();
+            exit(1);
+        }
     }
     
     printf("Enter maximum demand matrix (%d x %d):\n", NUMBER_OF_CUSTOMERS, NUMBER_OF_RESOURCES);
     for (int i = 0; i < NUMBER_OF_CUSTOMERS; i++) {
         printf("Customer %d: ", i);
         for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
-            scanf("%d", &maximum[i][j]);
+            if (scanf("%d", &maximum[i][j]) != 1 || maximum[i][j] < 0) {
+                fprintf(stderr, "Invalid input\n");
+                free(total_resources);
+                free_memory();
+                exit(1);
+            }
         }
     }
     
@@ -122,7 +142,12 @@ void read_input() {
     for (int i = 0; i < NUMBER_OF_CUSTOMERS; i++) {
         printf("Customer %d: ", i);
         for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
-            scanf("%d", &allocation[i][j]);
+            if (scanf("%d", &allocation[i][j]) != 1 || allocation[i][j] < 0) {
+                fprintf(stderr, "Invalid input\n");
+                free(total_resources);
+                free_memory();
+                exit(1);
+            }
         }
     }
     
