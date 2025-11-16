@@ -1,12 +1,19 @@
 /*
  * Banker's Algorithm Implementation
+ * CPSC 321: Operating Systems - Assignment 4
  * 
  * This program implements the Banker's Algorithm for deadlock avoidance.
- * It reads system state (available resources, maximum demand, current allocation)
- * and processes resource requests, determining if granting the request would
- * leave the system in a safe state.
+ * The Banker's Algorithm ensures that resource allocation leaves the system
+ * in a safe state, preventing deadlock.
  * 
- * Input: System state and resource request
+ * Algorithm Overview:
+ * 1. Maintains data structures: available, maximum, allocation, and need
+ * 2. When a request is made, checks if it can be granted safely
+ * 3. Uses Safety Algorithm to verify the system remains in a safe state
+ * 4. Only grants requests that result in a safe state
+ * 
+ * Input: System state (customers, resources, available, maximum, allocation)
+ *        and a resource request from a customer
  * Output: "State Safe" with safe sequence, or "State Unsafe"
  */
 
@@ -31,13 +38,13 @@ int **allocation;
 int **need;
 
 // Function prototypes
-void allocate_memory();
-void free_memory();
-void read_input();
-void calculate_need();
-bool is_safe(int *safe_sequence);
-bool request_resources(int customer_id, int *request, int *safe_sequence);
-bool validate_input();
+void allocate_memory();  // Allocate memory for all data structures
+void free_memory();      // Free all allocated memory
+void read_input();       // Read system state from user input
+void calculate_need();   // Calculate need matrix: need = maximum - allocation
+bool is_safe(int *safe_sequence);  // Safety Algorithm: check if state is safe
+bool request_resources(int customer_id, int *request, int *safe_sequence);  // Process resource request
+bool validate_input();   // Validate input data for consistency
 
 // Allocate memory for all data structures
 void allocate_memory() {
@@ -196,8 +203,14 @@ void calculate_need() {
     }
 }
 
-// Safety algorithm: returns true if system is in safe state
-// safe_sequence will contain the safe sequence if found
+// Safety Algorithm: determines if the current system state is safe
+// Returns true if a safe sequence exists, false otherwise
+// If safe, safe_sequence will contain the execution order (C0, C1, ..., Cn-1)
+// Algorithm:
+//   1. Initialize work = available, finish[i] = false for all i
+//   2. Find a customer i where finish[i] == false and need[i] <= work
+//   3. If found: work = work + allocation[i], finish[i] = true, repeat step 2
+//   4. If all customers finish, state is safe; otherwise unsafe
 bool is_safe(int *safe_sequence) {
     int *work = (int*)malloc(NUMBER_OF_RESOURCES * sizeof(int));
     bool *finish = (bool*)malloc(NUMBER_OF_CUSTOMERS * sizeof(bool));
@@ -263,9 +276,16 @@ bool is_safe(int *safe_sequence) {
     return true;
 }
 
-// Handle resource request from a customer
-// Returns true if request is granted, false if denied
-// If granted, safe_sequence will contain the safe sequence
+// Handle resource request from a customer using Banker's Algorithm
+// Returns true if request is granted (leaves system in safe state), false if denied
+// If granted, safe_sequence will contain the safe execution sequence
+// Steps:
+//   1. Check if request <= need[customer_id]
+//   2. Check if request <= available
+//   3. Check if allocation + request <= maximum
+//   4. Temporarily allocate resources
+//   5. Check if resulting state is safe using Safety Algorithm
+//   6. If safe, keep allocation; if unsafe, revert allocation
 bool request_resources(int customer_id, int *request, int *safe_sequence) {
     // Step 1: Check if request <= need[customer_id]
     for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
