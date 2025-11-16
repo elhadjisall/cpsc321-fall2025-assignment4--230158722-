@@ -36,7 +36,7 @@ void free_memory();
 void read_input();
 void calculate_need();
 bool is_safe(int *safe_sequence);
-bool request_resources(int customer_id, int *request);
+bool request_resources(int customer_id, int *request, int *safe_sequence);
 bool validate_input();
 
 // Allocate memory for all data structures
@@ -240,7 +240,8 @@ bool is_safe(int *safe_sequence) {
 
 // Handle resource request from a customer
 // Returns true if request is granted, false if denied
-bool request_resources(int customer_id, int *request) {
+// If granted, safe_sequence will contain the safe sequence
+bool request_resources(int customer_id, int *request, int *safe_sequence) {
     // Step 1: Check if request <= need[customer_id]
     for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
         if (request[j] > need[customer_id][j]) {
@@ -255,15 +256,21 @@ bool request_resources(int customer_id, int *request) {
         }
     }
     
-    // Step 3: Try to allocate resources temporarily
+    // Step 3: Check if allocation + request <= maximum
+    for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
+        if (allocation[customer_id][j] + request[j] > maximum[customer_id][j]) {
+            return false; // Request would exceed maximum
+        }
+    }
+    
+    // Step 4: Try to allocate resources temporarily
     for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
         available[j] -= request[j];
         allocation[customer_id][j] += request[j];
         need[customer_id][j] -= request[j];
     }
     
-    // Step 4: Check if resulting state is safe
-    int *safe_sequence = (int*)malloc(NUMBER_OF_CUSTOMERS * sizeof(int));
+    // Step 5: Check if resulting state is safe
     bool safe = is_safe(safe_sequence);
     
     if (!safe) {
@@ -273,11 +280,9 @@ bool request_resources(int customer_id, int *request) {
             allocation[customer_id][j] -= request[j];
             need[customer_id][j] += request[j];
         }
-        free(safe_sequence);
         return false;
     }
     
-    free(safe_sequence);
     return true;
 }
 
@@ -298,7 +303,11 @@ int main() {
     // Read resource request
     printf("Enter Resource Request: ");
     int customer_id;
-    scanf("%d", &customer_id);
+    if (scanf("%d", &customer_id) != 1) {
+        printf("State Unsafe\n");
+        free_memory();
+        return 0;
+    }
     
     // Validate customer_id
     if (customer_id < 0 || customer_id >= NUMBER_OF_CUSTOMERS) {
@@ -307,17 +316,24 @@ int main() {
         return 0;
     }
     
+    // Allocate memory for request and safe sequence
     int *request = (int*)malloc(NUMBER_OF_RESOURCES * sizeof(int));
-    if (request == NULL) {
+    int *safe_sequence = (int*)malloc(NUMBER_OF_CUSTOMERS * sizeof(int));
+    
+    if (request == NULL || safe_sequence == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
+        if (request != NULL) free(request);
+        if (safe_sequence != NULL) free(safe_sequence);
         free_memory();
         return 1;
     }
     
+    // Read request values
     for (int i = 0; i < NUMBER_OF_RESOURCES; i++) {
         if (scanf("%d", &request[i]) != 1) {
             printf("State Unsafe\n");
             free(request);
+            free(safe_sequence);
             free_memory();
             return 0;
         }
@@ -325,59 +341,16 @@ int main() {
         if (request[i] < 0) {
             printf("State Unsafe\n");
             free(request);
+            free(safe_sequence);
             free_memory();
             return 0;
         }
     }
     
-    // Check if request is valid and process it
-    // Step 1: Check if request <= need[customer_id] (ensures allocation + request <= maximum)
-    // Step 2: Check if request <= available
-    bool valid = true;
-    for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
-        if (request[j] > need[customer_id][j] || request[j] > available[j]) {
-            valid = false;
-            break;
-        }
-        // Additional check: ensure allocation + request doesn't exceed maximum
-        if (allocation[customer_id][j] + request[j] > maximum[customer_id][j]) {
-            valid = false;
-            break;
-        }
-    }
+    // Process the request using request_resources function
+    bool granted = request_resources(customer_id, request, safe_sequence);
     
-    if (!valid) {
-        printf("State Unsafe\n");
-        free(request);
-        free_memory();
-        return 0;
-    }
-    
-    // Temporarily apply the request
-    for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
-        available[j] -= request[j];
-        allocation[customer_id][j] += request[j];
-        need[customer_id][j] -= request[j];
-    }
-    
-    // Check if resulting state is safe
-    int *safe_sequence = (int*)malloc(NUMBER_OF_CUSTOMERS * sizeof(int));
-    if (safe_sequence == NULL) {
-        // Revert the request
-        for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
-            available[j] += request[j];
-            allocation[customer_id][j] -= request[j];
-            need[customer_id][j] += request[j];
-        }
-        printf("State Unsafe\n");
-        free(request);
-        free_memory();
-        return 1;
-    }
-    
-    bool safe = is_safe(safe_sequence);
-    
-    if (safe) {
+    if (granted) {
         printf("State Safe\n");
         printf("Safe sequence: ");
         for (int i = 0; i < NUMBER_OF_CUSTOMERS; i++) {
@@ -388,12 +361,6 @@ int main() {
         }
         printf("\n");
     } else {
-        // Revert the request
-        for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
-            available[j] += request[j];
-            allocation[customer_id][j] -= request[j];
-            need[customer_id][j] += request[j];
-        }
         printf("State Unsafe\n");
     }
     
